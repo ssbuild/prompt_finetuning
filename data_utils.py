@@ -64,8 +64,11 @@ class NN_DataHelper(DataHelper):
         src_text = " ".join(src_text.split())
         tgt_text = " ".join(tgt_text.split())
 
-        o1 = tokenizer.encode_plus(text=src_text, truncation=True,max_length=max_seq_length)
-        o2 = tokenizer.encode_plus(text=tgt_text, truncation=True,max_length=max_seq_length)
+        o1 = tokenizer.encode_plus(text=src_text, truncation=True,max_length=max_seq_length,return_token_type_ids=False)
+        o2 = tokenizer.encode_plus(text=tgt_text, truncation=True,max_length=max_seq_length-1,return_token_type_ids=False)
+
+        o2['input_ids'] = [config.decoder_start_token_id] + o2['input_ids']
+        o2['attention_mask'] = [1] + o2['attention_mask']
 
         input_ids = np.asarray(o1['input_ids'], dtype=np.int64)
         attention_mask = np.asarray(o1['attention_mask'], dtype=np.int64)
