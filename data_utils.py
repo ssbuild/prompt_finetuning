@@ -12,6 +12,7 @@ import typing
 import numpy as np
 import torch
 from deep_training.data_helper import DataHelper, ModelArguments, TrainingArguments, DataArguments
+from deep_training.nlp.models.lora import LoraArguments
 from deep_training.utils.func import is_chinese_char
 from fastdatasets.record import load_dataset as Loader, RECORD, WriterObject, gfile
 from tqdm import tqdm
@@ -32,8 +33,8 @@ train_info_args = {
     'train_batch_size': 6,
     'eval_batch_size': 2,
     'test_batch_size': 2,
-    'optimizer': 'adamw',
-    'learning_rate': 5e-5,
+     'optimizer': 'lion', # one of adamw,adam,lion
+    'learning_rate': 5e-5, # lora 调大学习率 1e-3
     'adam_epsilon': 1e-8,
     'gradient_accumulation_steps': 1,
     'max_grad_norm': 1.0,
@@ -41,10 +42,30 @@ train_info_args = {
     'warmup_steps': 0,
     'output_dir': './output',
     'max_seq_length': 512,
-    'max_target_length': 100  # 预测最大长度
+    'max_target_length': 100,  # 预测最大长度
+
+    ##############  lora模块
+    'with_lora': False,  # 是否启用lora模块
+    'lora_model_name_or_path': None,  # 预训练权重
+    'inference_mode': False,
+    'r': 8,
+    'target_modules': ['q', 'v'],
+    'lora_alpha': 32,
+    # 'enable_lora': [True],
+    'enable_lora': None,
+    'lora_dropout': 0.1,
+    'merge_weights': False,
+    'fan_in_fan_out': False,
+    'bias': 'none',  # Bias type for Lora. Can be 'none', 'all' or 'lora_only'"
 }
 
 
+def preprocess(text):
+    return text.replace("\n", "_")
+
+
+def postprocess(text):
+    return text.replace("_", "\n")
 
 class NN_DataHelper(DataHelper):
     index = 1
@@ -147,13 +168,11 @@ class NN_DataHelper(DataHelper):
 
 
 if __name__ == '__main__':
-
-    parser = HfArgumentParser((ModelArguments, TrainingArguments, DataArguments))
-    model_args, training_args, data_args = parser.parse_dict(train_info_args)
+    parser = HfArgumentParser((ModelArguments, TrainingArguments, DataArguments, LoraArguments))
+    model_args, training_args, data_args, lora_args = parser.parse_dict(train_info_args)
 
     dataHelper = NN_DataHelper(model_args, training_args, data_args)
     tokenizer, config, label2id, id2label = dataHelper.load_tokenizer_and_config()
-    config.decoder_start_token_id = tokenizer.cls_token_id
     # 缓存数据集
     # 检测是否存在 output/dataset_0-train.record ，不存在则制作数据集
     if data_args.do_train:
