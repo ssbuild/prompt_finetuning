@@ -137,7 +137,8 @@ class NN_DataHelper(DataHelper):
                 doc_type = jd.get('type', '')
                 src_text = jd['input']
                 tgt_text = jd['target']
-                src_text = src_text.replace("\n", "_")
+                src_text = preprocess(src_text)
+                tgt_text = preprocess(tgt_text)
                 if i < 10:
                     print(doc_type,src_text,tgt_text)
                 D.append((doc_type,src_text,tgt_text))
