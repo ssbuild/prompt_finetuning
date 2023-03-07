@@ -1,7 +1,7 @@
 ## 安装
 
-- pip install -U deep_training >= 0.0.15
-- 当前文档版本pypi 0.0.15
+- pip install -U deep_training >= 0.0.16
+- 当前文档版本pypi 0.0.16
 
 ## 更新详情
 
@@ -9,7 +9,8 @@
 
 ## 深度学习常规任务例子
 
-- [deep_training-examples](https://github.com/ssbuild/deep_training-examples)
+- [deep_training-pytorch-example](https://github.com/ssbuild/deep_training-pytorch-example)
+- [deep_training-tf-example](https://github.com/ssbuild/deep_training-tf-example)
 
 ## clue-prompt finetuning 
 
@@ -27,7 +28,11 @@
 
 ## 生成训练record
 
-python data_utils.py
+    python data_utils.py
+    
+    注:
+    num_process_worker 为多进程制作数据 ， 如果数据量较大 ， 适当调大至cpu数量
+    dataHelper.make_dataset_with_args(data_args.train_file,mixed_data=False, shuffle=True,mode='train',num_process_worker=0)
 
 ## 训练
 
