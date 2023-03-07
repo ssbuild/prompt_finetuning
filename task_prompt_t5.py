@@ -191,7 +191,32 @@ if __name__ == '__main__':
                                                        config=config,
                                                        model_args=model_args,
                                                        training_args=training_args)
-            model.convert_to_onnx('./best.onnx')
+            model_: transformers.T5ForConditionalGeneration
+            model_ = model.backbone.model
+            # 保存权重, 可选上传至huggingface
+            tokenizer: T5Tokenizer
+            config: T5Config
+            tokenizer.save_pretrained('chatyuan_finetuning')
+            config.save_pretrained('chatyuan_finetuning')
+            model_.save_pretrained('chatyuan_finetuning', push_to_hub=False, max_shard_size="10GB")
+
+            # 转换onnx 模型
+            input_sample = (
+                ("input_ids", torch.ones(size=(1, 128), dtype=torch.int32)),
+                ("attention_mask", torch.ones(size=(1, 128), dtype=torch.int32)),
+                ("decoder_input_ids", torch.ones(size=(1, 128), dtype=torch.int32)),
+                ("decoder_attention_mask", torch.ones(size=(1, 128), dtype=torch.int32)),
+            )
+            input_names = ("input_ids", "attention_mask", "decoder_input_ids", "decoder_attention_mask")
+            output_names = ("pred_ids",)
+            dynamic_axes = None or {"input_ids": [0, 1], "attention_mask": [0, 1],
+                                    "decoder_input_ids": [0, 1], "decoder_attention_mask": [0, 1],
+                                    "pred_ids": [0, 1]}
+            model.convert_to_onnx('./best.onnx',
+                                  input_sample=input_sample,
+                                  input_names=input_names,
+                                  output_names=output_names,
+                                  dynamic_axes=dynamic_axes)
         else:
             # 加载权重
             lora_args = LoraArguments.from_pretrained('./best_ckpt')
